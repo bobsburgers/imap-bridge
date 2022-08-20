@@ -1,0 +1,4 @@
+fastapi
+uvicorn[standard]
+
+git+https://github.com/Tracardi/tracardi.git@master
