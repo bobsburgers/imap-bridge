@@ -39,7 +39,7 @@ application.add_middleware(
 )
 
 
-def report_i_am_alive():
+def run_imap_bridge():
     async def heartbeat():
         while True:
             # xxxx
@@ -71,7 +71,7 @@ This event source is automatically registered when bridge starts.
     )
     result = await dispatcher.register_source(event_source)
     logger.info(f"IMAP Bridge registered with id {config.tracardi.source_id} and result {result}")
-
+    run_imap_bridge()
 
 @application.on_event("shutdown")
 async def app_shutdown():
