@@ -57,21 +57,9 @@ class EventDispatcher:
                     logger.info("TRACARDI: response: status {},  {}".format(response.status, await response.text()))
                     return response
 
-    async def dispatch_track(self, topic, payload):
+    async def dispatch_track(self, event_type, properties):
 
         try:
-            event_type = topic.replace("/", "-")
-
-            if config.tracardi.event_type is None:
-                payload = {"payload": payload}
-            else:
-                # If you define event type then all the event will have static event type and the topic
-                # will be send in props
-                event_type = config.tracardi.event_type
-                payload = {
-                    "topic": topic,
-                    "payload": payload
-                }
 
             tracker_payload = TrackerPayload(
                 source=Entity(id=config.tracardi.source_id),
@@ -81,13 +69,13 @@ class EventDispatcher:
                 context={},
                 properties={},
                 events=[
-                    EventPayload(type=event_type, properties=payload)
+                    EventPayload(type=event_type, properties=properties)
                 ],
                 options={"saveSession": False}
             )
 
             return await synchronized_event_tracking(tracker_payload, self._local_ip(), profile_less=True,
-                                                     allowed_bridges=['mqtt'])
+                                                     allowed_bridges=['imap'])
         except Exception as e:
             logger.error(str(e))
 
