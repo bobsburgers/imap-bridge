@@ -79,21 +79,16 @@ class EventDispatcher:
         except Exception as e:
             logger.error(str(e))
 
-    async def dispatch_vi_api(self, topic, payload):
-
-        event_type = topic.replace("/", "-")
+    async def dispatch_vi_api(self, event_type, properties):
 
         async with aiohttp.ClientSession() as session:
 
             if config.tracardi.event_type is None:
                 url = f"{config.tracardi.api_host}/collect/{event_type}/{config.tracardi.source_id}"
-                payload = {"payload": payload}
+                payload = properties
             else:
                 url = f"{config.tracardi.api_host}/collect/{config.tracardi.event_type}/{config.tracardi.source_id}"
-                payload = {
-                    "topic": topic,
-                    "payload": payload
-                }
+                payload = properties
             async with session.post(url, json=payload) as response:
                 logger.info("TRACARDI: response: status {},  {}".format(response.status, await response.text()))
 
