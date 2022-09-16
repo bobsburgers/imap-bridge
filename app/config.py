@@ -1,6 +1,9 @@
 import logging
 import os
 from uuid import uuid4
+from dotenv import load_dotenv
+
+load_dotenv(r'D:\Programing\tracardi\imap-bridge\app\.env')
 
 
 def _get_logging_level(level: str) -> int:
@@ -39,14 +42,14 @@ class TracardiConfig:
 
 class IMAPConfig:
     def __init__(self, env):
-        self.server = env['IMAP_SERVER'] if 'IMAP_SERVER' in env else 'localhost'
-        self.port = env['IMAP_PORT'] if 'IMAP_PORT' in env else 1883
+        self.host = env['IMAP_HOST'] if 'IMAP_HOST' in env else 'localhost'
+        self.port = int(env['IMAP_PORT']) if 'IMAP_PORT' in env else 1883
         self.user = env['IMAP_USERNAME'] if 'IMAP_USERNAME' in env else None
         self.password = env['IMAP_PASSWORD'] if 'IMAP_PASSWORD' in env else None
-        self.check_every = 60
+        self.mailbox = env['IMAP_MAILBOX'] if 'IMAP_MAILBOX' in env else 'INBOX'
 
     def is_configured(self):
-        return self.server is not None and self.user is not None and self.password is not None
+        return self.host is not None and self.user is not None and self.password is not None
 
 
 auth = AuthConfig(os.environ)
