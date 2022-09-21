@@ -22,7 +22,7 @@ def _get_logging_level(level: str) -> int:
 
 class BridgeConfig:
     def __init__(self, env):
-        self.type = env['EVENT_TYPE'] if 'EVENT_TYPE' in env else 'track'
+        self.event_type = env['EVENT_TYPE'] if 'EVENT_TYPE' in env else 'track'
 
 
 class AuthConfig:
@@ -33,7 +33,7 @@ class AuthConfig:
 class TracardiConfig:
     def __init__(self, env):
         self.api_host = env['TRACARDI_API_HOST'] if 'TRACARDI_API_HOST' in env else None
-        self.source_id = env['TRACARDI_SOURCE'] if 'TRACARDI_SOURCE' in env else str(uuid4())
+        self.source_id = env['TRACARDI_SOURCE_ID'] if 'TRACARDI_SOURCE_ID' in env else str(uuid4())
         self.event_type = env['TRACARDI_EVENT_TYPE'] if 'TRACARDI_EVENT_TYPE' in env else None
 
     def is_configured(self):

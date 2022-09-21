@@ -57,7 +57,7 @@ class EventDispatcher:
                     logger.info("TRACARDI: response: status {},  {}".format(response.status, await response.text()))
                     return response
 
-    async def dispatch_track(self, event_type, properties):
+    async def dispatch_track(self, event_type: str, payload: dict):
 
         try:
 
@@ -69,7 +69,7 @@ class EventDispatcher:
                 context={},
                 properties={},
                 events=[
-                    EventPayload(type=event_type, properties=properties)
+                    EventPayload(type=event_type, properties=payload)
                 ],
                 options={"saveSession": False}
             )
@@ -79,23 +79,22 @@ class EventDispatcher:
         except Exception as e:
             logger.error(str(e))
 
-    async def dispatch_vi_api(self, event_type, properties):
-
+    async def dispatch_vi_api(self, event_type: str, payload: dict):
         async with aiohttp.ClientSession() as session:
 
             if config.tracardi.event_type is None:
                 url = f"{config.tracardi.api_host}/collect/{event_type}/{config.tracardi.source_id}"
-                payload = properties
+                payload = payload
             else:
                 url = f"{config.tracardi.api_host}/collect/{config.tracardi.event_type}/{config.tracardi.source_id}"
-                payload = properties
+                payload = payload
             async with session.post(url, json=payload) as response:
                 logger.info("TRACARDI: response: status {},  {}".format(response.status, await response.text()))
 
-    async def dispatch(self, topic, payload):
+    async def dispatch(self, event_type: str, payload: dict):
         if self.event_type == 'track':
-            await self.dispatch_track(topic, payload)
+            await self.dispatch_track(event_type, payload)
         elif self.event_type == 'api':
-            await self.dispatch_vi_api(topic, payload)
+            await self.dispatch_vi_api(event_type, payload)
         else:
             raise ValueError("Unknown dispatcher type.")
