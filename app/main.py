@@ -72,8 +72,8 @@ IMAP Bridge runs a imap worker in order to retrieve e-mails and push every new e
 This event source is automatically registered when bridge starts. 
 """
     )
-    # result = await dispatcher.register_source(event_source)
-    # logger.info(f"IMAP Bridge registered with id {config.tracardi.source_id} and result {result}")
+    result = await dispatcher.register_source(event_source)
+    logger.info(f"IMAP Bridge registered with id {config.tracardi.source_id} and result {result}")
     run_imap_bridge()
 
 
