@@ -53,7 +53,7 @@ def run_imap_bridge():
 
 @application.on_event("startup")
 async def app_starts():
-    dispatcher = EventDispatcher(type=config.bridge.type)
+    dispatcher = EventDispatcher(event_type=config.bridge.event_type)
     event_source = EventSource(
             id=config.tracardi.source_id,
             type='imap',
@@ -79,7 +79,7 @@ This event source is automatically registered when bridge starts.
 
 @application.on_event("shutdown")
 async def app_shutdown():
-    dispatcher = EventDispatcher(type=config.bridge.type)
+    dispatcher = EventDispatcher(event_type=config.bridge.event_type)
     result = await dispatcher.unregister_source(config.tracardi.source_id)
     logger.info(f"IMAP Bridge unregistered with id {config.tracardi.source_id} and result {result}")
 

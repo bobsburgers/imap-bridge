@@ -22,7 +22,7 @@ def _get_logging_level(level: str) -> int:
 
 class BridgeConfig:
     def __init__(self, env):
-        self.type = env['TYPE'] if 'TYPE' in env else 'track'
+        self.type = env['EVENT_TYPE'] if 'EVENT_TYPE' in env else 'track'
 
 
 class AuthConfig:

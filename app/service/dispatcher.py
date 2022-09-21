@@ -22,8 +22,8 @@ logger.setLevel(logging.INFO)
 
 class EventDispatcher:
 
-    def __init__(self, type="track"):
-        self.type = type
+    def __init__(self, event_type="track"):
+        self.event_type = event_type
 
     @staticmethod
     def _local_ip():
@@ -31,9 +31,9 @@ class EventDispatcher:
         return socket.gethostbyname(hostname)
 
     async def register_source(self, event_source: EventSource):
-        if self.type == 'track':
+        if self.event_type == 'track':
             return await save_source(event_source)
-        elif self.type == 'api':
+        elif self.event_type == 'api':
             async with aiohttp.ClientSession() as session:
                 url = f"{config.tracardi.api_host}/event-source"
 
@@ -45,9 +45,9 @@ class EventDispatcher:
                     return response
 
     async def unregister_source(self, source_id):
-        if self.type == 'track':
+        if self.event_type == 'track':
             return await storage.driver.event_source.delete(source_id)
-        elif self.type == 'api':
+        elif self.event_type == 'api':
             async with aiohttp.ClientSession() as session:
 
                 # todo authenticate first
@@ -93,9 +93,9 @@ class EventDispatcher:
                 logger.info("TRACARDI: response: status {},  {}".format(response.status, await response.text()))
 
     async def dispatch(self, topic, payload):
-        if self.type == 'track':
+        if self.event_type == 'track':
             await self.dispatch_track(topic, payload)
-        elif self.type == 'api':
+        elif self.event_type == 'api':
             await self.dispatch_vi_api(topic, payload)
         else:
             raise ValueError("Unknown dispatcher type.")
