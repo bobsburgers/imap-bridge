@@ -22,22 +22,22 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 application = FastAPI(
-        title="Tracardi IMAP Bridge",
-        description="TRACARDI open-source_id customer data platform",
-        version="0.7.2-dev",
-        contact={
-            "name": "Risto Kowaczewski, Ben Ullrich",
-            "url": "http://github.com/tracardi/imap-bridge",
-            "email": "office@tracardi.com",
-        },
+    title="Tracardi IMAP Bridge",
+    description="TRACARDI open-source_id customer data platform",
+    version="0.7.2-dev",
+    contact={
+        "name": "Risto Kowaczewski, Ben Ullrich",
+        "url": "http://github.com/tracardi/imap-bridge",
+        "email": "office@tracardi.com",
+    },
 )
 
 application.add_middleware(
-        CORSMiddleware,
-        allow_origins=['*'],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -48,6 +48,7 @@ def run_imap_bridge():
                          mailbox=config.imap.mailbox)
         await e.start()
         await e.logout()
+    
     asyncio.create_task(heartbeat())
 
 
@@ -55,15 +56,15 @@ def run_imap_bridge():
 async def app_starts():
     dispatcher = EventDispatcher(event_type=config.bridge.event_type)
     event_source = EventSource(
-            id=config.tracardi.source_id,
-            type='imap',
-            name="IMAP Bridge",
-            description=f"IMAP Bridge at {get_local_ip()}",
-            tags=['imap', 'bridge'],
-            transitional=False,
-            locked=True,
-            groups=["Bridge"],
-            manual="""# Bridge description
+        id=config.tracardi.source_id,
+        type='imap',
+        name="IMAP Bridge",
+        description=f"IMAP Bridge at {get_local_ip()}",
+        tags=['imap', 'bridge'],
+        transitional=False,
+        locked=True,
+        groups=["Bridge"],
+        manual="""# Bridge description
         
 IMAP Bridge runs a imap worker in order to retrieve e-mails and push every new e-mail to Tracardi. 
 
@@ -79,6 +80,7 @@ This event source is automatically registered when bridge starts.
 
 @application.on_event("shutdown")
 async def app_shutdown():
+    # ideally we want to run the stop function on the class and wait for it to stop before we quit.
     dispatcher = EventDispatcher(event_type=config.bridge.event_type)
     result = await dispatcher.unregister_source(config.tracardi.source_id)
     logger.info(f"IMAP Bridge unregistered with id {config.tracardi.source_id} and result {result}")

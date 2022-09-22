@@ -7,10 +7,7 @@ from aioimaplib import STOP_WAIT_SERVER_PUSH
 from app import config
 from app.service.dispatcher import EventDispatcher
 
-ID_HEADER_SET = {
-    'Content-Type', 'From', 'To', 'Cc', 'Bcc', 'Date', 'Subject',
-    'Message-ID', 'In-Reply-To', 'References', 'Body'
-}
+get_these = ('Content-Type', 'From', 'To', 'Cc', 'Bcc', 'Date', 'Subject')
 
 
 class EMailChecker:
@@ -85,7 +82,6 @@ class EMailChecker:
     def process_to_dict(response) -> dict:
         if response.result == 'OK':
             msg = email.message_from_bytes(response[1][1])
-            get_these = ('Content-Type', 'From', 'To', 'Cc', 'Bcc', 'Date', 'Subject')
             
             email_dict = {g: msg[g] for g in get_these if msg[g]}
             if msg.is_multipart():
@@ -94,7 +90,7 @@ class EMailChecker:
                     cdispo = str(part.get('Content-Disposition'))
                     
                     if ctype == 'text/plain' and 'attachment' not in cdispo:
-                        email_dict['body'] = part.get_payload(decode=False)   # decode
+                        email_dict['body'] = part.get_payload(decode=False)  # decode
                         break
             else:
                 email_dict['body'] = msg.get_payload(decode=False)
