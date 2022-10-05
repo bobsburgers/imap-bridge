@@ -27,9 +27,10 @@ class EMailChecker:
         self.mailbox = mailbox
         self.dispatcher = dispatcher
 
+
     @staticmethod
     async def connect() -> 'EMailChecker':
-        return EMailChecker(
+        checker = EMailChecker(
             dispatcher=await EventDispatcher.connect(),
             host=config.imap.host,
             port=config.imap.port,
@@ -37,6 +38,8 @@ class EMailChecker:
             password=config.imap.password,
             mailbox=config.imap.mailbox
         )
+        await checker.start()
+        return checker
 
     async def get_client_logged_in(self) -> aioimaplib.IMAP4 or aioimaplib.IMAP4_SSL:
         try:
@@ -83,11 +86,6 @@ class EMailChecker:
 
     async def start(self):
         self.client = await self.get_client_logged_in()  # type: aioimaplib.IMAP4 or aioimaplib.IMAP4_SSL
-        while self.run:
-            await self.fetch_all_unseen()
-            await self.wait_for_new_message()
-        await self.logout()
-        return
 
     async def fetch_all_unseen(self):
         logger.info("Fetching unseen e-mails.")
