@@ -28,6 +28,7 @@ async def run_bridge(_shut_down):
     except asyncio.CancelledError:
         logger.info("Canceling task.")
         await _shut_down()
+        #todo logout does not work
         # await checker.logout()
 
 """
