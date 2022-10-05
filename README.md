@@ -19,3 +19,5 @@ docker run -e EVENT_TRANSPORT=track \
 -e REDIS_HOST="redis://192.168.1.103:6379" \
 tracardi/bridge-imap:0.7.3-dev
 ```
+
+Other env variables come from tracardi/tracardi
