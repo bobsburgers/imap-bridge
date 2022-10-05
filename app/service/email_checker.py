@@ -40,8 +40,7 @@ class EMailChecker:
         emails = []
         for _id in ids[0].split()[::-1]:
             _id = '%d' % int(_id)
-            email = await self.client.uid('fetch', _id, 'BODY.PEEK[]')
-            emails.append(email)
+            emails.append(await self.client.uid('fetch', _id, 'BODY[]'))
         # emails += self.make_dict_from_email(data)
         return emails
     
@@ -58,7 +57,6 @@ class EMailChecker:
         return email
     
     async def fetch_ids(self, search: str) -> [bytes, ]:
-        # await self.client.select(self.mailbox)
         result, data = await self.client.search(search)
         assert result == 'OK'
         return data
@@ -68,16 +66,19 @@ class EMailChecker:
     
     async def start(self):
         self.client = await self.get_client_logged_in()  # type: aioimaplib.IMAP4 or aioimaplib.IMAP4_SSL
-        unreads = await self.fetch(search='Unseen')
-        for unread in unreads:
-            s = self.process_to_dict(unread)
-            r = await self.dispatcher.dispatch(config.bridge.event_type, s)
-            pass
         while self.run:
+            await self.fetch_all_unseen()
             await self.wait_for_new_message()
         await self.logout()
         return
     
+    async def fetch_all_unseen(self):
+        unread = await self.fetch(search='Unseen')
+        await self.process_each_email_and_send(unread)
+
+    async def process_each_email_and_send(self, unread):
+        [await self.dispatcher.dispatch(config.bridge.event_type, self.process_to_dict(_email)) for _email in unread]
+
     @staticmethod
     def process_to_dict(response) -> dict:
         if response.result == 'OK':
@@ -98,14 +99,14 @@ class EMailChecker:
     
     async def wait_for_new_message(self, ):
         await self.client.select(self.mailbox)
-        idle = await self.client.idle_start(timeout=10)
+        idle = await self.client.idle_start()
+        
         while self.run and self.client.has_pending_idle():
-            msg = await self.client.wait_server_push()
-            print(msg)
-            if msg == STOP_WAIT_SERVER_PUSH:
+            msg = await self.client.wait_server_push(timeout=23 * 60)
+            if msg == STOP_WAIT_SERVER_PUSH or b'EXISTS' in msg[0]:
                 self.client.idle_done()
                 await asyncio.wait_for(idle, 1)
-            else:
-                msg = self.process_to_dict(msg)
-                await self.dispatcher.dispatch(config.bridge.event_type, msg)
-        # await self.client.logout()
+        
+        if self.client.has_pending_idle():
+            self.client.idle_done()
+            await asyncio.wait_for(idle, 1)

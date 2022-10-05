@@ -79,7 +79,8 @@ class EventDispatcher:
         except Exception as e:
             logger.error(str(e))
 
-    async def dispatch_vi_api(self, event_type: str, payload: dict):
+    @staticmethod
+    async def dispatch_vi_api(event_type: str, payload: dict):
         async with aiohttp.ClientSession() as session:
 
             if config.tracardi.event_type is None:
