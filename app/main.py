@@ -42,11 +42,13 @@ application.add_middleware(
 
 def run_imap_bridge():
     async def heartbeat():
-        e = await EMailChecker.connect()
-        await e.start()
-        await e.logout()
+        checker = await EMailChecker.connect()
+        logger.info("Bridge starts")
+        await checker.start()
+        logger.info("Bridge logouts")
+        await checker.logout()
 
-    logger.info("Bridge starts")
+    logger.info("Bridge opens")
     asyncio.create_task(heartbeat())
 
 
@@ -87,7 +89,6 @@ async def app_shutdown():
 
 if not config.tracardi.is_configured():
     raise ConnectionError("TRACARDI is not configured.")
-
 
 if __name__ == "__main__":
     import uvicorn

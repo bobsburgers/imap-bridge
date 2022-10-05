@@ -23,6 +23,7 @@ def _get_logging_level(level: str) -> int:
 class BridgeConfig:
     def __init__(self, env):
         self.event_transport = env['EVENT_TRANSPORT'] if 'EVENT_TRANSPORT' in env else 'track'
+        self.wait = 1
 
 
 class AuthConfig:

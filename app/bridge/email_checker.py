@@ -123,8 +123,8 @@ class EMailChecker:
             msg = await self.client.wait_server_push(timeout=23 * 60)
             if msg == STOP_WAIT_SERVER_PUSH or b'EXISTS' in msg[0]:
                 self.client.idle_done()
-                await asyncio.wait_for(idle, 1)
+                await asyncio.wait_for(idle, config.bridge.wait)
 
         if self.client.has_pending_idle():
             self.client.idle_done()
-            await asyncio.wait_for(idle, 1)
+            await asyncio.wait_for(idle, config.bridge.wait)
