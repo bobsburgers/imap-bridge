@@ -1,9 +1,6 @@
 import logging
 import os
 from uuid import uuid4
-from dotenv import load_dotenv
-
-load_dotenv(r'.env')
 
 
 def _get_logging_level(level: str) -> int:
