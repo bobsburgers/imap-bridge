@@ -2,7 +2,7 @@ import json
 import logging
 import socket
 
-import aiohttp
+from app.service.tracardi_api_client import TracardiApiClient
 from tracardi.domain.entity import Entity
 from tracardi.domain.event_metadata import EventPayloadMetadata
 from tracardi.domain.event_source import EventSource
@@ -22,8 +22,17 @@ logger.setLevel(logging.INFO)
 
 class EventDispatcher:
 
-    def __init__(self, event_type="track"):
-        self.event_type = event_type
+    def __init__(self, api_client: TracardiApiClient, event_transport="track"):
+        if event_transport not in ['track', 'api']:
+            raise ValueError("EVENT_TRANSPORT invalid value. Possible values [track, api]")
+        self.event_transport = event_transport
+        self.api_client = api_client
+
+    @staticmethod
+    async def connect() -> 'EventDispatcher':
+        api_client = TracardiApiClient(config.tracardi.api_host)
+        await api_client.set_credentials(config.tracardi.username, config.tracardi.password)
+        return EventDispatcher(api_client, config.bridge.event_transport)
 
     @staticmethod
     def _local_ip():
@@ -31,31 +40,32 @@ class EventDispatcher:
         return socket.gethostbyname(hostname)
 
     async def register_source(self, event_source: EventSource):
-        if self.event_type == 'track':
+        if self.event_transport == 'track':
             return await save_source(event_source)
-        elif self.event_type == 'api':
-            async with aiohttp.ClientSession() as session:
-                url = f"{config.tracardi.api_host}/event-source"
+        elif self.event_transport == 'api':
+            endpoint = "/event-source"
 
-                # todo authenticate first
+            payload = json.loads(json.dumps(event_source.dict(), default=str))
+            response, json_response, _ = await self.api_client.post(endpoint, json=payload)
+            logger.info("TRACARDI: response: status {},  {}".format(response.status, response.reason))
 
-                payload = json.dumps(event_source.dict(), default=str)
-                async with session.post(url, json=payload) as response:
-                    logger.info("TRACARDI: response: status {},  {}".format(response.status, await response.text()))
-                    return response
+            if response.status == 401:
+                raise ConnectionError(f"Can not connect to TRACARDI. Reason: {response.reason}")
+
+            return response
 
     async def unregister_source(self, source_id):
-        if self.event_type == 'track':
+        if self.event_transport == 'track':
             return await storage.driver.event_source.delete(source_id)
-        elif self.event_type == 'api':
-            async with aiohttp.ClientSession() as session:
+        elif self.event_transport == 'api':
+            endpoint = f"/event-source/{source_id}"
+            response, json_response, _ = await self.api_client.delete(endpoint)
 
-                # todo authenticate first
+            if response.status != 200:
+                raise ConnectionError(f"Could not unregister source. Reason: {response.reason}")
 
-                url = f"{config.tracardi.api_host}/event-source"
-                async with session.delete(url) as response:
-                    logger.info("TRACARDI: response: status {},  {}".format(response.status, await response.text()))
-                    return response
+            logger.info("TRACARDI: response: status {},  {}".format(response.status, response.reason))
+            return response
 
     async def dispatch_track(self, event_type: str, payload: dict):
 
@@ -79,23 +89,20 @@ class EventDispatcher:
         except Exception as e:
             logger.error(str(e))
 
-    @staticmethod
-    async def dispatch_vi_api(event_type: str, payload: dict):
-        async with aiohttp.ClientSession() as session:
+    async def dispatch_vi_api(self, event_type: str, payload: dict):
+        payload = payload
+        if config.tracardi.event_type is None:
+            endpoint = f"/collect/{event_type}/{config.tracardi.source_id}"
+        else:
+            endpoint = f"/collect/{config.tracardi.event_type}/{config.tracardi.source_id}"
 
-            if config.tracardi.event_type is None:
-                url = f"{config.tracardi.api_host}/collect/{event_type}/{config.tracardi.source_id}"
-                payload = payload
-            else:
-                url = f"{config.tracardi.api_host}/collect/{config.tracardi.event_type}/{config.tracardi.source_id}"
-                payload = payload
-            async with session.post(url, json=payload) as response:
-                logger.info("TRACARDI: response: status {},  {}".format(response.status, await response.text()))
+        response, _, data = await self.api_client.post(endpoint, json=payload)
+        logger.info("TRACARDI: response: status {},  {}".format(response.status, data))
 
     async def dispatch(self, event_type: str, payload: dict):
-        if self.event_type == 'track':
+        if self.event_transport == 'track':
             await self.dispatch_track(event_type, payload)
-        elif self.event_type == 'api':
+        elif self.event_transport == 'api':
             await self.dispatch_vi_api(event_type, payload)
         else:
             raise ValueError("Unknown dispatcher type.")

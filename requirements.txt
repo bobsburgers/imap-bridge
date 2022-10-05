@@ -1,4 +1,5 @@
 fastapi
 uvicorn[standard]
 aioimaplib
+aiohttp
 git+https://github.com/Tracardi/tracardi.git@master

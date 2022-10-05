@@ -3,7 +3,7 @@ import os
 from uuid import uuid4
 from dotenv import load_dotenv
 
-load_dotenv(r'D:\Programing\tracardi\imap-bridge\app\.env')
+load_dotenv(r'.env')
 
 
 def _get_logging_level(level: str) -> int:
@@ -22,7 +22,7 @@ def _get_logging_level(level: str) -> int:
 
 class BridgeConfig:
     def __init__(self, env):
-        self.event_type = env['EVENT_TYPE'] if 'EVENT_TYPE' in env else 'track'
+        self.event_transport = env['EVENT_TRANSPORT'] if 'EVENT_TRANSPORT' in env else 'track'
 
 
 class AuthConfig:
@@ -35,6 +35,8 @@ class TracardiConfig:
         self.api_host = env['TRACARDI_API_HOST'] if 'TRACARDI_API_HOST' in env else None
         self.source_id = env['TRACARDI_SOURCE_ID'] if 'TRACARDI_SOURCE_ID' in env else str(uuid4())
         self.event_type = env['TRACARDI_EVENT_TYPE'] if 'TRACARDI_EVENT_TYPE' in env else None
+        self.username = env['TRACARDI_USERNAME'] if 'TRACARDI_USERNAME' in env else ""
+        self.password = env['TRACARDI_PASSWORD'] if 'TRACARDI_PASSWORD' in env else ""
 
     def is_configured(self):
         return self.api_host is not None
