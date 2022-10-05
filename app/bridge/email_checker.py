@@ -86,14 +86,6 @@ class EMailChecker:
 
     async def start(self):
         self.client = await self.get_client_logged_in()  # type: aioimaplib.IMAP4 or aioimaplib.IMAP4_SSL
-        # try:
-        #     while self.run:
-        #         await self.fetch_all_unseen()
-        #         await self.wait_for_new_message()
-        # finally:
-        #     print('logout')
-        #     await self.logout()
-        # return
 
     async def fetch_all_unseen(self):
         logger.info("Fetching unseen e-mails.")

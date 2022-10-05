@@ -26,11 +26,6 @@ class BridgeConfig:
         self.wait = 1
 
 
-class AuthConfig:
-    def __init__(self, env):
-        self.token = env['TOKEN'] if 'TOKEN' in env else None
-
-
 class TracardiConfig:
     def __init__(self, env):
         self.api_host = env['TRACARDI_API_HOST'] if 'TRACARDI_API_HOST' in env else None
@@ -55,7 +50,6 @@ class IMAPConfig:
         return self.host is not None and self.user is not None and self.password is not None
 
 
-auth = AuthConfig(os.environ)
 imap = IMAPConfig(os.environ)
 tracardi = TracardiConfig(os.environ)
 bridge = BridgeConfig(os.environ)

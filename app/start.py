@@ -14,6 +14,11 @@ logger.setLevel(logging.INFO)
 
 
 async def run_bridge(_shut_down):
+    """
+    This is the function to run the bridge loop
+    _shut_down: Will be called on the shut-down
+    """
+
     checker = await EMailChecker.connect()
 
     try:
@@ -25,7 +30,11 @@ async def run_bridge(_shut_down):
         await _shut_down()
         # await checker.logout()
 
-
+"""
+Event source to open for this bridge. Use config.bridge.event_transport = track whenever possible.
+It gives more protection on the event source. If you use config.bridge.event_transport = api then regular
+REST API is used. 
+"""
 bridge_type = 'rest' if config.bridge.event_transport == 'api' else 'imap'
 event_source = EventSource(
     id=config.tracardi.source_id,
