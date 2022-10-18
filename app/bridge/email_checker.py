@@ -7,6 +7,7 @@ import aioimaplib as aioimaplib
 from aioimaplib import STOP_WAIT_SERVER_PUSH
 
 from app import config
+from app.bridge.bounce_processing import check_if_bounce
 from app.service.dispatcher import EventDispatcher
 
 get_these = ('Content-Type', 'From', 'To', 'Cc', 'Bcc', 'Date', 'Subject')
@@ -14,7 +15,7 @@ get_these = ('Content-Type', 'From', 'To', 'Cc', 'Bcc', 'Date', 'Subject')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
+idle_timeout = 23 * 60
 
 class EMailChecker:
     def __init__(self, dispatcher: EventDispatcher, host: str, port: int, user: str, password: str, mailbox: str):
@@ -111,6 +112,7 @@ class EMailChecker:
                         break
             else:
                 email_dict['body'] = msg.get_payload(decode=False)
+            check_if_bounce(email_dict)
             return email_dict
 
     async def wait_for_new_message(self, ):
@@ -118,7 +120,7 @@ class EMailChecker:
         idle = await self.client.idle_start()
 
         while self.run and self.client.has_pending_idle():
-            msg = await self.client.wait_server_push(timeout=23 * 60)
+            msg = await self.client.wait_server_push(timeout=idle_timeout)
             if msg == STOP_WAIT_SERVER_PUSH or b'EXISTS' in msg[0]:
                 self.client.idle_done()
                 await asyncio.wait_for(idle, config.bridge.wait)
